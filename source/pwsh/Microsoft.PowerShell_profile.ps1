@@ -192,7 +192,8 @@ function prompt()
     .NOTES
     Called automatically by Powershell.
     #>
-    Update-ConsoleWindowTitleWithCurrentPath    # Sync terminal title with current working directory.
+    Update-ConsoleWindowTitleWithCurrentPath;   # Sync terminal title with current working directory.
+    Update-GitProjectFolders;                   # Update git data if we are in a git project directory.
     Write-Host;                                 # Initial blank line.
     Write-CustomPromptTopLine;                  # Top line, user@computer, directory and git.
     Write-CustomPromptBottomLine                # Bottom line, arrow prompt. 
@@ -333,13 +334,13 @@ function Write-CustomPromptFilePathData
     # just the project directory but show inner path to ant sub directories
     # within the project (for navigation). Also change the glyps to hint
     # that it's an "opened" folder.
-    if ( Test-IsGitDirectory )
+    if ( $Global:YuyoseiGitFolders.is_git_dir )
     {
-        $cwd            = $( git rev-parse --show-toplevel );
+        $cwd            = $Global:YuyoseiGitFolders.git_root_dir;
         $display_dir    = Format-Pah "$( Split-Path $cwd -Leaf )";
         $glyph          = $Global:YuyoseiGlyphs.solid_folder_open;
 
-        if ( $git_dir = Get-GitRelitaveFolder )
+        if ( $git_dir = $Global:YuyoseiGitFolders.git_relitave_dir )
         {
             $display_dir    = Format-Pah "$( Split-Path $cwd -Leaf )/$git_dir";
         }
@@ -356,8 +357,8 @@ function Write-CustomPromptGitBranch
         [switch] $NoNewLine
     );
 
-    $branch = Get-GitBranch;
-    Write-Host $(if (-not [string]::IsNullOrEmpty($branch)) { "$($Global:YuyoseiGlyphs.solid_code_branch) $(Get-GitBranch)"} else { "" } ) -NoNewline:$NoNewLine -ForegroundColor White;
+    $branch = $Global:YuyoseiGitFolders.git_branch;
+    Write-Host $(if (-not [string]::IsNullOrEmpty($branch)) { "$($Global:YuyoseiGlyphs.solid_code_branch) $($branch)"} else { "" } ) -NoNewline:$NoNewLine -ForegroundColor White;
 }
 
 function Update-ConsoleWindowTitleWithCurrentPath 
@@ -381,20 +382,41 @@ function Get-CustomPromptUserGlyph
     return $( if ( Test-Administrator ) { $Global:YuyoseiGlyphs.solid_user_tie } else {  $Global:YuyoseiGlyphs.solid_user } );
 }
 
-function Get-GitBranch 
+# ----------------------------------------------------------------------
+#region Git project functions.
+
+# ---------------
+function Update-GitProjectFolders
 {
-    return $( if ( Test-IsGitDirectory) { "$(git symbolic-ref --short HEAD)" } else { "" } );
+    <#
+    .SYNOPSIS
+    Updates the global git directory information.
+    
+    .DESCRIPTION
+    Gets the git branch, relitave directory and project directory and 
+    updates the global with the data.
+    
+    .NOTES
+    This function is used to get all relitave git information in one
+    swoop to improve performance.
+    #>
+    Set-Variable -Scope global -Name YuyoseiGitFolders -Value @{ 
+        git_branch          = "";
+        git_relitave_dir    = "";
+        git_root_dir        = "";
+        is_git_dir          = $false;
+    }
+
+    if (git rev-parse --git-dir 2> $null)
+    {
+        $Global:YuyoseiGitFolders.git_root_dir      = "$( git rev-parse --show-toplevel )";
+        $Global:YuyoseiGitFolders.git_branch        = "$( git symbolic-ref --short HEAD )";
+        $Global:YuyoseiGitFolders.git_relitave_dir  = "$( git rev-parse --show-prefix   )";
+        $Global:YuyoseiGitFolders.is_git_dir        = $true;
+    }
 }
 
-function Get-GitRelitaveFolder 
-{
-    return $( if ( Test-IsGitDirectory ) { "$(git rev-parse --show-prefix)" } else { "" })
-}
-
-function Test-IsGitDirectory
-{
-    return  (git rev-parse --git-dir 2> $null);
-}
+#endregion
 
 function Test-Administrator  
 {  
