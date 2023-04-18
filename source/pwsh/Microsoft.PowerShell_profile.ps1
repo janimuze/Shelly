@@ -36,15 +36,21 @@ Set-PSReadLineKeyHandler -Key Tab -Function Complete;
 #       the string value here. FontAwesome available at 
 #       https://fontawesome.com
 Set-Variable -Scope global -Option ReadOnly -Name YuyoseiGlyphs -Value @{
+    # FontAwesome Glyphs -------
     solid_user          = "`u{f007}";       # Common user icon.
     solid_user_tie      = "`u{f508}";       # Administrative user icon.
     solid_folder        = "`u{f07b}";       # Folder icon.
+    solid_folder_open   = "`u{f07c}";       # Rolder open icon.
     solid_code_branch   = "`u{f126}";       # Code branch icon.
     solid_terminal      = "`u{f120}";       # Terminal icon.
     solid_point_right   = "`u{f0a4}";       # Hand pointing right.
     solid_point_left    = "`u{f0a5}";       # Hand pointing left.
     solid_computer      = "`u{e4e5}";
-
+    # Box icons ----------------
+    box_left_top        = "`u{250c}";
+    box_left_bottom     = "`u{2514}";
+    box_line            = "`u{2500}";
+    box_arrow_right     = "`u{27A4}";
     # TODO: Add more icons...?
 };
 
@@ -118,7 +124,7 @@ Remove-Alias -Name pwd;
     Write-Host "$( $Global:YuyoseiGlyphs.solid_folder ) $( (Get-Location).Path )";
 }
 
-
+# ---------------
 function whoami
 {
     <#
@@ -143,6 +149,7 @@ function whoami
     Write-Host " $( $PSVersionTable.PSVersion.BuildLabel )" -NoNewline;
 }
 
+# ---------------
 function whereis
 {
     <#
@@ -175,43 +182,194 @@ function whereis
 
 #endregion 
 
-# Main prompt function.
+# ---------------
 function prompt()
 {
-    Update-ConsoleWindowTitleWithCurrentPath
-    Write-Host;
-    Write-Host "`u{250c}" -NoNewline;
-    Write-CustomPropmtUserData;
-    Write-CustomPromptFilePathData;
-    Write-CustomPromptGitBranch;
-    Write-Host " ";
-    Write-Host "`u{2514}`u{2500}" -NoNewline;
-    Write-Host "`u{27A4}" -NoNewline;
+    <#
+    .SYNOPSIS
+    Displays the custom user prompt and updates the terminal/console window title.
+    
+    .NOTES
+    Called automatically by Powershell.
+    #>
+    Update-ConsoleWindowTitleWithCurrentPath    # Sync terminal title with current working directory.
+    Write-Host;                                 # Initial blank line.
+    Write-CustomPromptTopLine;                  # Top line, user@computer, directory and git.
+    Write-CustomPromptBottomLine                # Bottom line, arrow prompt. 
     return " ";
 }
 
+# ---------------
+function Write-CustomPromptTopLine 
+{
+    <#
+    .SYNOPSIS
+    Writes the first (top) line of the custom shell prompt.
+    #>
+    Write-Host "$( $Global:YuyoseiGlyphs.box_left_top )" -NoNewline;    # Border of line top row.
+    Write-CustomPropmtUserData -NoNewLine;                              # User@Computer prompt.
+    Write-CustomPromptFilePathData -NoNewLine                           # Current directory prompt.
+    Write-CustomPromptGitBranch;                                        # Git branch prompt.
+
+}
+
+# ---------------
+function Write-CustomPromptBottomLine 
+{
+    <#
+    .SYNOPSIS
+    Writes the seccond (bottom) line of the custom shell prompt.
+    #>
+    Write-Host "$($Global:YuyoseiGlyphs.box_left_bottom )" -NoNewline;  # Border of line bottom row.
+    Write-Host "$($Global:YuyoseiGlyphs.box_line )" -NoNewline;         # Line between border and arrow.
+    Write-Host "$($Global:YuyoseiGlyphs.box_arrow_right )" -NoNewline;  # Arrow of prompt line.
+}
+
+# ---------------
 function Write-CustomPropmtUserData 
 {
-    Write-Host "$( Get-CustomPromptUserGlyph ) $( $env:USERNAME )@$( $env:COMPUTERNAME.ToLower() ) " `
-        -NoNewline -ForegroundColor (Get-CustomPromptUserColor);
+    <#
+    .SYNOPSIS
+    Writes the custom prompts user data.
+    
+    .DESCRIPTION
+    Mimics other POSIX-line shells: displays in the form of USER@HOST 
+    format. The color of the prompt depends on id the user has 
+    administrator / root permissions in the current session. If the user
+    is elevated, it displays red with a tie glyph, otherwise it is
+    green with a normal glyph.
+    
+    .PARAMETER NoNewLine
+    SKips adding a new line after printing the prompt. 
+    
+    .EXAMPLE
+    Write-CustomPropmtUserData -NoNewline
+    
+    .NOTES
+    TODO: Add link to the Yuyosei/Shelly spec (once published).
+    #>
+    param(
+        [Parameter(Mandatory=$false)]
+        [switch] $NoNewLine,
+        [Parameter(Mandatory=$false)]
+        [switch] $OnlyUser
+    );
+
+    $glyph      = $Global:YuyoseiGlyphs.solid_user;
+    $color      = [System.ConsoleColor]::DarkGreen;
+    $userName   = [System.Environment]::UserName;
+    $hostName   = [System.Environment]::MachineName.ToLower();
+    $display    = "$( $glyph ) $( $userName )@$( $hostName )";
+
+    # Change glyph and color if user is an admin / root.
+    if ( Test-Administrator )
+    {  
+        $glyph  = $Global:YuyoseiGlyphs.solid_user_tie;
+        $color  = [System.ConsoleColor]::DarkRed;
+
+    }
+
+    # Option to display only the username
+    if ( $OnlyUser )
+    {
+        $display = "$( $glyph ) $( $userName )";
+    }
+
+    Write-Host "$( $display ) " -NoNewline:$NoNewLine -ForegroundColor ( $color );
 }
 
+# ---------------
 function Write-CustomPromptFilePathData 
 {
+    <#
+    .SYNOPSIS
+    Displays the directory name or path portion of the shell prompt.
     
-    Write-Host "$( $Global:YuyoseiGlyphs.solid_folder ) $(Split-Path -leaf -path (Get-Location)) " `
-        -NoNewline -ForegroundColor (Get-CustomPromptPathColor);
+    .DESCRIPTION
+    Generally displays the path to the current working, but will
+    shorten folders in the users "Home" directory with a tiddle 
+    (~) as is the case with other POSIX-like shells.
+    A special case is used for git projects where it'll also 
+    shorten the path to just the project directory and it's sub
+    directories. This makes more space to display the branch
+    without breaking the line. 
+    
+    .EXAMPLE
+    Write-CustomPromptFilePathData
+    
+    .NOTES
+    TODO: Add link to the Yuyosei/Shelly spec (once published).
+    #>
+    param(
+        [Parameter(Mandatory=$false)]
+        [switch] $NoNewLine
+    );
+
+    $cwd         = (Get-Location).Path;
+    $display_dir = $cwd.Replace($HOME, "~");
+    $glyph       = $Global:YuyoseiGlyphs.solid_folder;
+    $color       = [System.ConsoleColor]::Green;
+    $is_user_dir = $cwd.StartsWith($HOME);
+
+    # Set the color to be used as the directory prompt if not within
+    # the or a subdirectory of the users HOME directory.
+    #   - If the user is an administrator, mark the directory yellow
+    #     to indicate a warning that they may not be in safe territory.
+    #   - If the user is not an administrator, mark the directory red
+    #     to indicate the user may need to elevate/su/sudo to work here.
+    if ( -not $is_user_dir )
+    {
+        if ( Test-Administrator )
+        {
+            $color = [System.ConsoleColor]::Yellow;
+        }
+        else 
+        {
+            $color = [System.ConsoleColor]::Red;
+        }
+    }
+
+    # Special scenario for git project directories. Shortens the path to
+    # just the project directory but show inner path to ant sub directories
+    # within the project (for navigation). Also change the glyps to hint
+    # that it's an "opened" folder.
+    if ( Test-IsGitDirectory )
+    {
+        $cwd            = $( git rev-parse --show-toplevel );
+        $display_dir    = Format-Pah "$( Split-Path $cwd -Leaf )";
+        $glyph          = $Global:YuyoseiGlyphs.solid_folder_open;
+
+        if ( $git_dir = Get-GitRelitaveFolder )
+        {
+            $display_dir    = Format-Pah "$( Split-Path $cwd -Leaf )/$git_dir";
+        }
+    }
+
+    # Display the prompt.
+    Write-Host "$( $glyph ) $( $display_dir ) " -NoNewline:$NoNewLine -ForegroundColor $color;
 }
 
-function Write-CustomPromptGitBranch {
-    Write-Host "$(Get-GitBranch)" -NoNewline -ForegroundColor White;
+function Write-CustomPromptGitBranch 
+{
+    param(
+        [Parameter(Mandatory=$false)]
+        [switch] $NoNewLine
+    );
+
+    $branch = Get-GitBranch;
+    Write-Host $(if (-not [string]::IsNullOrEmpty($branch)) { "$($Global:YuyoseiGlyphs.solid_code_branch) $(Get-GitBranch)"} else { "" } ) -NoNewline:$NoNewLine -ForegroundColor White;
 }
 
-function Update-ConsoleWindowTitleWithCurrentPath {
+function Update-ConsoleWindowTitleWithCurrentPath 
+{
     Set-Title $(Split-Path -leaf -path (Get-Location));
 }
 
-
+function Get-CustomDirectoryAliasPath 
+{
+    return (Get-Location).Path.Replace($HOME, "~");
+    
+}
 
 function Get-CustomPromptUserColor
 {
@@ -223,40 +381,19 @@ function Get-CustomPromptUserGlyph
     return $( if ( Test-Administrator ) { $Global:YuyoseiGlyphs.solid_user_tie } else {  $Global:YuyoseiGlyphs.solid_user } );
 }
 
-function Get-CustomPromptPathColor
-{
-    if ( ( Get-Location ).Path.StartsWith( $HOME ) )
-    {
-        # Use GREEN for all paths within the users home directory.
-        return [System.ConsoleColor]::Green;
-    }
-    else 
-    {
-        if ( Test-Administrator )
-        {
-            # If we are ADMIN/ROOT, use yellow as a warning, indicating the folder content
-            # CAN be modified but we're outside the comfort zone of the HOME folder...
-            return [System.ConsoleColor]::Yellow;
-        }
-        else 
-        {
-            # If we are NOT ADMIN/ROOT, use red to indicate that we might need to elevate
-            # or sudo to be able to modify the content here.
-            [System.ConsoleColor]::Red;
-        }
-    }
-}
-
 function Get-GitBranch 
 {
-    $isGitFolder = (git rev-parse --git-dir 2> $null);
-    $currentBranch = "";
+    return $( if ( Test-IsGitDirectory) { "$(git symbolic-ref --short HEAD)" } else { "" } );
+}
 
-    if($isGitFolder)
-    {
-        $currentBranch = "`u{f126} $(git symbolic-ref --short HEAD)";
-    }
-    return $currentBranch;
+function Get-GitRelitaveFolder 
+{
+    return $( if ( Test-IsGitDirectory ) { "$(git rev-parse --show-prefix)" } else { "" })
+}
+
+function Test-IsGitDirectory
+{
+    return  (git rev-parse --git-dir 2> $null);
 }
 
 function Test-Administrator  
@@ -267,6 +404,22 @@ function Test-Administrator
     [Security.Principal.WindowsPrincipal]$user = [Security.Principal.WindowsIdentity]::GetCurrent();
     return $user.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator);
     
+}
+
+function Format-Pah
+{
+    param(
+        [Parameter()]
+        [string] $path = $null
+    );
+
+    $path = $path.Replace("/", [IO.Path]::DirectorySeparatorChar).Replace("\", [IO.Path]::DirectorySeparatorChar);
+    if ( $path.Substring( $path.Length - 1 ) -eq [IO.Path]::DirectorySeparatorChar )
+    {
+        $path = $path.TrimEnd( [IO.Path]::DirectorySeparatorChar );
+    }
+
+    $path;
 }
 
 function Set-Title
