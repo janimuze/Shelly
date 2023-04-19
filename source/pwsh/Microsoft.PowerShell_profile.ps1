@@ -45,7 +45,8 @@ Set-Variable -Scope global -Option ReadOnly -Name YuyoseiGlyphs -Value @{
     solid_terminal      = "`u{f120}";       # Terminal icon.
     solid_point_right   = "`u{f0a4}";       # Hand pointing right.
     solid_point_left    = "`u{f0a5}";       # Hand pointing left.
-    solid_computer      = "`u{e4e5}";
+    solid_computer      = "`u{e4e5}";       # Computer
+    solid_exclamation   = "`u{f071}";       # Alert exclimation
     # Box icons ----------------
     box_left_top        = "`u{250c}";
     box_left_bottom     = "`u{2514}";
@@ -72,10 +73,9 @@ function ls
         .DESCRIPTION
         Wrapper for the 'ls' command.
     #>
-
-    if (Test-CommandExeExists "ls")
+    if ( $command = ( Get-Command "ls" -CommandType Application -ErrorAction SilentlyContinue ).Source )
     {
-        & ls.exe -a --color=auto $args;
+        &$command --color=auto $args;
     }
     else {
         Get-ChildItem $args;
@@ -94,9 +94,9 @@ function  ll
         .DESCRIPTION
         Wrapper for the 'ls' command.
     #>
-    if (Test-CommandExeExists "ls")
+    if ( $command = ( Get-Command "ls" -CommandType Application -ErrorAction SilentlyContinue ).Source )
     {
-        & ls.exe -la --color=auto $args;
+        &$command -la --color=auto $args;
     }
     else {
         Get-ChildItem $args;
@@ -138,15 +138,15 @@ function whoami
     .EXAMPLE
     See issue #0000129 for details about examples.
     #>
-    Write-Host "$( Get-CustomPromptUserGlyph ) $( $env:USERNAME )" -ForegroundColor (Get-CustomPromptUserColor) -NoNewline;
-    Write-Host "$( if ( Test-Administrator ) { " (administrator)" })" -ForegroundColor (Get-CustomPromptUserColor) -NoNewline;
-    Write-Host " on $($Global:YuyoseiGlyphs.solid_computer)$( $env:COMPUTERNAME.ToLower() )" -NoNewline;
-    Write-Host " using $($Global:YuyoseiGlyphs.solid_terminal) PowerShell $( $PSVersionTable.PSEdition ) version" -NoNewline;
-    Write-Host " $( $PSVersionTable.PSVersion.Major )" -NoNewline;
-    Write-Host ".$( $PSVersionTable.PSVersion.Minor )" -NoNewline;
-    Write-Host ".$( $PSVersionTable.PSVersion.Patch )" -NoNewline;
-    Write-Host " $( $PSVersionTable.PSVersion.PreReleaseLabel )" -NoNewline;
-    Write-Host " $( $PSVersionTable.PSVersion.BuildLabel )" -NoNewline;
+    # Write-Host "$( Get-CustomPromptUserGlyph ) $( $env:USERNAME )" -ForegroundColor (Get-CustomPromptUserColor) -NoNewline;
+    # Write-Host "$( if ( Test-Administrator ) { " (administrator)" })" -ForegroundColor (Get-CustomPromptUserColor) -NoNewline;
+    # Write-Host " on $($Global:YuyoseiGlyphs.solid_computer)$( $env:COMPUTERNAME.ToLower() )" -NoNewline;
+    # Write-Host " using $($Global:YuyoseiGlyphs.solid_terminal) PowerShell $( $PSVersionTable.PSEdition ) version" -NoNewline;
+    # Write-Host " $( $PSVersionTable.PSVersion.Major )" -NoNewline;
+    # Write-Host ".$( $PSVersionTable.PSVersion.Minor )" -NoNewline;
+    # Write-Host ".$( $PSVersionTable.PSVersion.Patch )" -NoNewline;
+    # Write-Host " $( $PSVersionTable.PSVersion.PreReleaseLabel )" -NoNewline;
+    # Write-Host " $( $PSVersionTable.PSVersion.BuildLabel )" -NoNewline;
 }
 
 # ---------------
@@ -173,10 +173,12 @@ function whereis
 
     if ( $command = Get-Command -Name $commandName -CommandType Application -ErrorAction SilentlyContinue )
     {
-        Write-Host "$( $Global:YuyoseiGlyphs.solid_point_right ) $( $command.Source )";
+        Write-Host "$( $Global:YuyoseiGlyphs.solid_point_right ) " -NoNewline -ForegroundColor White;
+        Write-Host "$( $command.Source )";
     }
     else {
-        Write-Host "`"$commandName`" not found.";
+        Write-Host "$( $Global:YuyoseiGlyphs.solid_exclamation ) " -NoNewline -ForegroundColor Yellow;
+        Write-Host "$( $commandName ): not found.";
     }
 }
 
@@ -260,7 +262,6 @@ function Write-CustomPropmtUserData
     $color      = [System.ConsoleColor]::DarkGreen;
     $userName   = [System.Environment]::UserName;
     $hostName   = [System.Environment]::MachineName.ToLower();
-    $display    = "$( $glyph ) $( $userName )@$( $hostName )";
 
     # Change glyph and color if user is an admin / root.
     if ( Test-Administrator )
@@ -274,6 +275,10 @@ function Write-CustomPropmtUserData
     if ( $OnlyUser )
     {
         $display = "$( $glyph ) $( $userName )";
+    }
+    else
+    {
+        $display    = "$( $glyph ) $( $userName )@$( $hostName )";
     }
 
     Write-Host "$( $display ) " -NoNewline:$NoNewLine -ForegroundColor ( $color );
