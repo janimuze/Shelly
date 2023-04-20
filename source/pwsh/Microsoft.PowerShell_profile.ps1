@@ -138,15 +138,19 @@ function whoami
     .EXAMPLE
     See issue #0000129 for details about examples.
     #>
-    # Write-Host "$( Get-CustomPromptUserGlyph ) $( $env:USERNAME )" -ForegroundColor (Get-CustomPromptUserColor) -NoNewline;
-    # Write-Host "$( if ( Test-Administrator ) { " (administrator)" })" -ForegroundColor (Get-CustomPromptUserColor) -NoNewline;
-    # Write-Host " on $($Global:YuyoseiGlyphs.solid_computer)$( $env:COMPUTERNAME.ToLower() )" -NoNewline;
-    # Write-Host " using $($Global:YuyoseiGlyphs.solid_terminal) PowerShell $( $PSVersionTable.PSEdition ) version" -NoNewline;
-    # Write-Host " $( $PSVersionTable.PSVersion.Major )" -NoNewline;
-    # Write-Host ".$( $PSVersionTable.PSVersion.Minor )" -NoNewline;
-    # Write-Host ".$( $PSVersionTable.PSVersion.Patch )" -NoNewline;
-    # Write-Host " $( $PSVersionTable.PSVersion.PreReleaseLabel )" -NoNewline;
-    # Write-Host " $( $PSVersionTable.PSVersion.BuildLabel )" -NoNewline;
+
+    $glyph      = $Global:YuyoseiGlyphs.solid_user;
+    $color      = [System.ConsoleColor]::White;
+    $userName   = [System.Environment]::UserName;
+
+    if (Test-Administrator)
+    {
+        $glyph      = $Global:YuyoseiGlyphs.solid_user_tie;
+        $color      = [System.ConsoleColor]::Red;
+    }
+
+    Write-Host "$( $glyph ) " -NoNewline -ForegroundColor $color;
+    Write-Host "$( $userName )";
 }
 
 # ---------------
