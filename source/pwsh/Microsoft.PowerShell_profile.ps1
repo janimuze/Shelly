@@ -37,21 +37,28 @@ Set-PSReadLineKeyHandler -Key Tab -Function Complete;
 #       https://fontawesome.com
 Set-Variable -Scope global -Option ReadOnly -Name YuyoseiGlyphs -Value @{
     # FontAwesome Glyphs -------
-    solid_user          = "`u{f007}";       # Common user icon.
-    solid_user_tie      = "`u{f508}";       # Administrative user icon.
-    solid_folder        = "`u{f07b}";       # Folder icon.
-    solid_folder_open   = "`u{f07c}";       # Rolder open icon.
-    solid_code_branch   = "`u{f126}";       # Code branch icon.
-    solid_terminal      = "`u{f120}";       # Terminal icon.
-    solid_point_right   = "`u{f0a4}";       # Hand pointing right.
-    solid_point_left    = "`u{f0a5}";       # Hand pointing left.
-    solid_computer      = "`u{e4e5}";       # Computer
-    solid_exclamation   = "`u{f071}";       # Alert exclimation
+    solid_user              = "`u{f007}";   # Common user icon.
+    solid_user_tie          = "`u{f508}";   # Administrative user icon.
+    solid_folder            = "`u{f07b}";   # Folder icon.
+    solid_folder_open       = "`u{f07c}";   # Rolder open icon.
+    solid_code_branch       = "`u{f126}";   # Code branch icon.
+    solid_terminal          = "`u{f120}";   # Terminal icon.
+    solid_point_right       = "`u{f0a4}";   # Hand pointing right.
+    solid_point_left        = "`u{f0a5}";   # Hand pointing left.
+    solid_computer          = "`u{e4e5}";   # Computer
+    solid_exclamation       = "`u{f071}";   # Alert exclimation
+    solid_arrow_right_left  = "`u{f0ec}";   # Double arrows right and left
+    solid_arrow_right       = "`u{f061}";   # Single arrow right
+    solid_arrow_left        = "`u{f060}";
     # Box icons ----------------
-    box_left_top        = "`u{250c}";
-    box_left_bottom     = "`u{2514}";
-    box_line            = "`u{2500}";
-    box_arrow_right     = "`u{27A4}";
+    box_left_top            = "`u{250c}";
+    box_left_bottom         = "`u{2514}";
+    box_line                = "`u{2500}";
+    box_arrow_right         = "`u{27A4}";
+    # Brand icons --------------
+    brand_keybase           = "`u{f4f5}";
+    brand_github            = "`u{f09b}";
+    brand_microsoft         = "`u{f3ca}";
     # TODO: Add more icons...?
 };
 
@@ -346,12 +353,12 @@ function Write-CustomPromptFilePathData
     if ( $Global:YuyoseiGitFolders.is_git_dir )
     {
         $cwd            = $Global:YuyoseiGitFolders.git_root_dir;
-        $display_dir    = Format-Pah "$( Split-Path $cwd -Leaf )";
+        $display_dir    = Format-Path "$( Split-Path $cwd -Leaf )";
         $glyph          = $Global:YuyoseiGlyphs.solid_folder_open;
 
         if ( $git_dir = $Global:YuyoseiGitFolders.git_relitave_dir )
         {
-            $display_dir    = Format-Pah "$( Split-Path $cwd -Leaf )/$git_dir";
+            $display_dir    = Format-Path "$( Split-Path $cwd -Leaf )/$git_dir";
         }
     }
 
@@ -366,8 +373,20 @@ function Write-CustomPromptGitBranch
         [switch] $NoNewLine
     );
 
-    $branch = $Global:YuyoseiGitFolders.git_branch;
-    Write-Host $(if (-not [string]::IsNullOrEmpty($branch)) { "$($Global:YuyoseiGlyphs.solid_code_branch) $($branch)"} else { "" } ) -NoNewline:$NoNewLine -ForegroundColor White;
+    # $branch = $Global:YuyoseiGitFolders.git_branch;
+    # Write-Host $(if (-not [string]::IsNullOrEmpty($branch)) { "$($Global:YuyoseiGlyphs.solid_code_branch) $($branch)"} else { "" } ) -NoNewline:$NoNewLine -ForegroundColor White;
+
+    if ( $Global:YuyoseiGitFolders.is_git_dir )
+    {
+        if ( $Global:YuyoseiGitFolders.source_icon )
+        {
+            Write-Host "$( $Global:YuyoseiGitFolders.source_icon )$( $Global:YuyoseiGlyphs.solid_arrow_right ) " -ForegroundColor White -NoNewline;
+        }
+        Write-Host "$( $Global:YuyoseiGlyphs.solid_code_branch ) $( $Global:YuyoseiGitFolders.git_branch )" -ForegroundColor White -NoNewline:$NoNewLine;
+    }
+    elseif ( -not $NoNewLine ) {
+        Write-Host;
+    }
 }
 
 function Update-ConsoleWindowTitleWithCurrentPath 
@@ -414,6 +433,7 @@ function Update-GitProjectFolders
         git_relitave_dir    = "";
         git_root_dir        = "";
         is_git_dir          = $false;
+        source_icon         = $null;
     }
 
     if (git rev-parse --git-dir 2> $null)
@@ -422,6 +442,20 @@ function Update-GitProjectFolders
         $Global:YuyoseiGitFolders.git_branch        = "$( git symbolic-ref --short HEAD )";
         $Global:YuyoseiGitFolders.git_relitave_dir  = "$( git rev-parse --show-prefix   )";
         $Global:YuyoseiGitFolders.is_git_dir        = $true;
+
+        $uri = "$( git remote -v )".Split([System.Environment]::NewLine)[0];
+
+        if ( $uri.Contains( "keybase:" ) )
+        {
+            $Global:YuyoseiGitFolders.source_icon = $Global:YuyoseiGlyphs.brand_keybase;
+        }
+        elseif ( $uri.Contains( "github.com" ) )
+        {
+            $Global:YuyoseiGitFolders.source_icon = $Global:YuyoseiGlyphs.brand_github;
+        }
+        elseif ( $uri.Contains( "azure.com" ) ) {
+            $Global:YuyoseiGitFolders.source_icon = $Global:YuyoseiGlyphs.brand_microsoft;
+        }
     }
 }
 
@@ -437,7 +471,7 @@ function Test-Administrator
     
 }
 
-function Format-Pah
+function Format-Path
 {
     param(
         [Parameter()]
