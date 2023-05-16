@@ -380,7 +380,7 @@ function Write-CustomPromptGitBranch
     {
         if ( $Global:YuyoseiGitFolders.source_icon )
         {
-            Write-Host "$( $Global:YuyoseiGitFolders.source_icon )$( $Global:YuyoseiGlyphs.solid_arrow_right ) " -ForegroundColor White -NoNewline;
+            Write-Host "$( $Global:YuyoseiGitFolders.source_icon ) / " -ForegroundColor White -NoNewline;
         }
         Write-Host "$( $Global:YuyoseiGlyphs.solid_code_branch ) $( $Global:YuyoseiGitFolders.git_branch )" -ForegroundColor White -NoNewline:$NoNewLine;
     }
