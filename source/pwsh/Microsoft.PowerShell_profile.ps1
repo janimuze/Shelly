@@ -60,6 +60,12 @@ Set-Variable -Scope global -Option ReadOnly -Name YuyoseiGlyphs -Value @{
     brand_github            = "`u{f09b}";
     brand_microsoft         = "`u{f3ca}";
     brand_windows           = "`u{f17a}";
+    brand_gitlab            = "`u{f296}";
+    brand_gitkraken         = "`u{f3a6}";
+    brand_bitbucket         = "`u{f171}";
+    brand_digital_ocean     = "`u{f391}";
+    brand_git_alt           = "`u{f841}";
+
     # TODO: Add more icons...?
 };
 
@@ -456,6 +462,9 @@ function Update-GitProjectFolders
         }
         elseif ( $uri.Contains( "azure.com" ) ) {
             $Global:YuyoseiGitFolders.source_icon = $Global:YuyoseiGlyphs.brand_windows;
+        }
+        else {
+            $Global:YuyoseiGitFolders.source_icon = $Global:YuyoseiGlyphs.brand_git_alt;
         }
     }
 }
