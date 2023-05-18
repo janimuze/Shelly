@@ -49,7 +49,8 @@ Set-Variable -Scope global -Option ReadOnly -Name YuyoseiGlyphs -Value @{
     solid_exclamation       = "`u{f071}";   # Alert exclimation
     solid_arrow_right_left  = "`u{f0ec}";   # Double arrows right and left
     solid_arrow_right       = "`u{f061}";   # Single arrow right
-    solid_arrow_left        = "`u{f060}";
+    solid_arrow_left        = "`u{f060}";   # Single left arrow
+    solid_cloud             = "`u{f0c2}";   # Cloud
     # Box icons ----------------
     box_left_top            = "`u{250c}";
     box_left_bottom         = "`u{2514}";
@@ -450,18 +451,40 @@ function Update-GitProjectFolders
         $Global:YuyoseiGitFolders.git_relitave_dir  = "$( git rev-parse --show-prefix   )";
         $Global:YuyoseiGitFolders.is_git_dir        = $true;
 
-        $uri = "$( git remote -v )".Split([System.Environment]::NewLine)[0];
+        $uri = "";
+        $( git remote -v ) | ForEach-Object -Process {
+            if ( $_.StartsWith( "origin" ) -and $_.Contains( "(fetch)" ) )
+            {
+                $uri = ($_ -replace "^origin{1}" -replace "(\s\S+){1}$").Trim();
+            }
+        }
 
-        if ( $uri.Contains( "keybase:" ) )
+        $domain = "";
+        if ( $uri.StartsWith( "http" ) -or $uri.StartsWith( "https" ) )
+        {
+            $domain = ( [System.Uri]$uri ).Host -replace '^www\.'
+        }
+
+        if ( $uri.StartsWith( "keybase:" ) )
         {
             $Global:YuyoseiGitFolders.source_icon = $Global:YuyoseiGlyphs.brand_keybase;
         }
-        elseif ( $uri.Contains( "github.com" ) )
+        elseif ( $domain.Equals( "github.com" ) )
         {
             $Global:YuyoseiGitFolders.source_icon = $Global:YuyoseiGlyphs.brand_github;
         }
-        elseif ( $uri.Contains( "azure.com" ) ) {
+        elseif ( $domain.Equals( "azure.com" ) ) 
+        {
             $Global:YuyoseiGitFolders.source_icon = $Global:YuyoseiGlyphs.brand_windows;
+        }
+        elseif ( $env:OneDrive -or $env:OneDriveConsumer -or $env:OneDriveCommercial) 
+        {
+            if ( $uri.StartsWith( $env:OneDrive ) -or `
+                 $uri.StartsWith( $env:OneDriveConsumer ) -or `
+                 $uri.StartsWith( $env:OneDriveCommercial ))
+            {
+                $Global:YuyoseiGitFolders.source_icon = $Global:YuyoseiGlyphs.solid_cloud;
+            }
         }
         else {
             $Global:YuyoseiGitFolders.source_icon = $Global:YuyoseiGlyphs.brand_git_alt;
