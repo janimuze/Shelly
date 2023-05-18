@@ -469,11 +469,11 @@ function Update-GitProjectFolders
         {
             $Global:YuyoseiGitFolders.source_icon = $Global:YuyoseiGlyphs.brand_keybase;
         }
-        elseif ( $domain.Equals( "github.com" ) )
+        elseif ( $domain.EndsWith( "github.com" ) )
         {
             $Global:YuyoseiGitFolders.source_icon = $Global:YuyoseiGlyphs.brand_github;
         }
-        elseif ( $domain.Equals( "azure.com" ) ) 
+        elseif ( $domain.EndsWith( "azure.com" ) ) 
         {
             $Global:YuyoseiGitFolders.source_icon = $Global:YuyoseiGlyphs.brand_windows;
         }
