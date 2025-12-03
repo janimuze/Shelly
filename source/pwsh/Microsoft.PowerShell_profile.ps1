@@ -119,6 +119,27 @@ function  ll
 }
 
 # ---------------
+function cdll
+{
+    <#
+    .SYNOPSIS
+    Change working directory and list contents in a single command.. 
+    
+    .DESCRIPTION
+    NOTE: This version is a custom function provided by the Yuyosei custom
+    powershell profile script.
+    
+    .EXAMPLE
+    See issue #0000129 for details about examples.
+    
+    .NOTES
+    This version of the function is incomplete. See issue #0000128 for details.
+    #>
+    Set-Location $args[0];
+    ll;
+}
+
+# ---------------
 Remove-Alias -Name pwd;
  function pwd 
 {
