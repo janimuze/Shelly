@@ -465,7 +465,7 @@ function Update-GitProjectFolders
         source_icon         = $null;
     }
     
-    if (git rev-parse --git-dir | Out-Null )
+    if (git rev-parse --git-dir 2> $null )
     {
         $Global:YuyoseiGitFolders.git_root_dir      = "$( git rev-parse --show-toplevel )";
         $Global:YuyoseiGitFolders.git_branch        = "$( git symbolic-ref --short HEAD )";
