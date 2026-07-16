@@ -409,7 +409,7 @@ function Write-CustomPromptGitBranch
     {
         if ( $Global:YuyoseiGitFolders.source_icon )
         {
-            Write-Host "$( $Global:YuyoseiGitFolders.source_icon ) " -ForegroundColor Yellow -NoNewline;
+            Write-Host "$( $Global:YuyoseiGitFolders.source_icon ) " -ForegroundColor White -NoNewline;
         }
         Write-Host "$( $Global:YuyoseiGlyphs.solid_code_branch ) $( $Global:YuyoseiGitFolders.git_branch )" -ForegroundColor White -NoNewline:$NoNewLine;
     }
@@ -465,7 +465,7 @@ function Update-GitProjectFolders
         source_icon         = $null;
     }
     
-    if (git rev-parse --git-dir 2> $null)
+    if (git rev-parse --git-dir | Out-Null )
     {
         $Global:YuyoseiGitFolders.git_root_dir      = "$( git rev-parse --show-toplevel )";
         $Global:YuyoseiGitFolders.git_branch        = "$( git symbolic-ref --short HEAD )";
