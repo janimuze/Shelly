@@ -236,7 +236,7 @@ function prompt()
     #>
     Update-ConsoleWindowTitleWithCurrentPath;   # Sync terminal title with current working directory.
     Update-GitProjectFolders;                   # Update git data if we are in a git project directory.
-    Write-Host;                                 # Initial blank line.
+    Write-Host                                  # Initial blank line.
     Write-CustomPromptTopLine;                  # Top line, user@computer, directory and git.
     Write-CustomPromptBottomLine                # Bottom line, arrow prompt. 
     return " ";
@@ -414,7 +414,7 @@ function Write-CustomPromptGitBranch
         Write-Host "$( $Global:YuyoseiGlyphs.solid_code_branch ) $( $Global:YuyoseiGitFolders.git_branch )" -ForegroundColor White -NoNewline:$NoNewLine;
     }
     elseif ( -not $NoNewLine ) {
-        Write-Host;
+        Write-Host 
     }
 }
 
@@ -465,7 +465,7 @@ function Update-GitProjectFolders
         source_icon         = $null;
     }
     
-    if (git rev-parse --git-dir 2> $null )
+    if ( git rev-parse --git-dir 2>$null )
     {
         $Global:YuyoseiGitFolders.git_root_dir      = "$( git rev-parse --show-toplevel )";
         $Global:YuyoseiGitFolders.git_branch        = "$( git symbolic-ref --short HEAD )";
