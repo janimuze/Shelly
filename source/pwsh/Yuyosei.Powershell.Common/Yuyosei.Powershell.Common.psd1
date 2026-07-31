@@ -3,31 +3,31 @@
 @{
 
   # Script module or binary module file associated with this manifest.
-  RootModule = 'ScriptModuleRepositoryTemplate.psm1'
+  RootModule = 'Yuyosei.Powershell.Common.psm1'
 
   # Version number of this module.
-  ModuleVersion = '0.0.0'
+  ModuleVersion = '1.0.0'
 
   # Supported PSEditions
   # CompatiblePSEditions = @()
 
   # ID used to uniquely identify this module
-  GUID = '643e6cf9-a844-4a1e-9771-643226c06943'
+  GUID = '231d3914-e189-433f-9a3d-34755aa01379'
 
   # Author of this module
-  Author = 'Daniel Schroeder'
+  Author = 'JΛΠIMUZΞ ヤニムズ'
 
   # Company or vendor of this module
-  CompanyName = 'Daniel Schroeder'
+  CompanyName = 'Yuyosei'
 
   # Copyright statement for this module
-  Copyright = '(c) Daniel Schroeder. All rights reserved.'
+  Copyright = '(c) JΛΠIMUZΞ ヤニムズ. All rights reserved.'
 
   # Description of the functionality provided by this module
-  Description = 'Create new PowerShell script module repositories quickly and easily with boilerplate files and CI/CD workflows already defined. See the project site for more information.'
+  Description = 'Powershell module that wraps the Yuyosei shell commands. For use with Powershell 7 and above on all supported platforms.'
 
   # Minimum version of the PowerShell engine required by this module
-  # PowerShellVersion = ''
+  PowerShellVersion = '7.5.0'
 
   # Name of the PowerShell host required by this module
   # PowerShellHostName = ''
@@ -64,7 +64,7 @@
 
   # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
   FunctionsToExport = @(
-    'New-PowerShellScriptModuleRepository'
+      # TODO...
   )
 
   # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
@@ -92,38 +92,30 @@
 
       # Tags applied to this module. These help with module discovery in online galleries.
       Tags = @(
-        'PowerShell'
-        'Module'
-        'Repository'
-        'Template'
-        'ScriptModule'
-        'Repo'
-        'GitHub'
-        'Actions'
-        'AzureDevOps'
-        'DevOps'
-        'Pipelines'
-        'CICD'
-        'Deploy'
+        'Yuyosei'
+        'Shelly'
+        'CommandLine'
+        'Shell'
+        'Terminal'
         'Windows'
         'MacOS'
         'Linux'
       )
 
       # A URL to the license for this module.
-      LicenseUri = 'https://github.com/deadlydog/PowerShell.ScriptModuleRepositoryTemplate/blob/main/License.md'
+      LicenseUri = 'https://github.com/janimuze/Shelly/blob/5fa882590ece068a92367992cb0f69c1f64b235f/LICENSE'
 
       # A URL to the main website for this project.
-      ProjectUri = 'https://github.com/deadlydog/PowerShell.ScriptModuleRepositoryTemplate'
+      ProjectUri = 'https://github.com/janimuze/Shelly'
 
-      # A URL to an icon representing this module.
+      # TODO: A URL to an icon representing this module.
       # IconUri = ''
 
-      # ReleaseNotes of this module
-      ReleaseNotes = 'Changelog: https://github.com/deadlydog/PowerShell.ScriptModuleRepositoryTemplate/blob/main/Changelog.md'
+      # TODO: ReleaseNotes of this module
+      # ReleaseNotes = ''
 
       # Prerelease string of this module
-      # Prerelease = ''
+      Prerelease = 'alpha'
 
       # Flag to indicate whether the module requires explicit user acceptance for install/update/save
       # RequireLicenseAcceptance = $false

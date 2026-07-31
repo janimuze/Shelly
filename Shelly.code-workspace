@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "source/pwsh/Yuyosei.Powershell.Common"
 		}
 	],
 	"settings": 
